@@ -46,31 +46,29 @@ class MACHINE:
 
     def check_availability(self, line):
         line_string = LineString(line)
+        dot1, dot2 = line
 
         # Must be one of the whole points
-        condition1 = (line[0] in self.whole_points) and (line[1] in self.whole_points)
+        if (dot1 not in self.whole_points) or (dot2 not in self.whole_points):
+            return False
 
         # Must not skip a dot
-        condition2 = True
         for point in self.whole_points:
-            if point == line[0] or point == line[1]:
+            if point == dot1 or point == dot2:
                 continue
             else:
                 if bool(line_string.intersection(Point(point))):
-                    condition2 = False
+                    return False
 
         # Must not cross another line
-        condition3 = True
-        for l in self.drawn_lines:
-            if len(list(set([line[0], line[1], l[0], l[1]]))) == 3:
+        for drawn_line in self.drawn_lines:
+            if len(set([dot1, dot2, drawn_line[0], drawn_line[1]])) == 3:
                 continue
-            elif bool(line_string.intersection(LineString(l))):
-                condition3 = False
+            elif bool(line_string.intersection(LineString(drawn_line))):
+                return False
 
         # Must be a new line
-        condition4 = line not in self.drawn_lines
-
-        if condition1 and condition2 and condition3 and condition4:
-            return True
-        else:
+        if line in self.drawn_lines:
             return False
+
+        return True
