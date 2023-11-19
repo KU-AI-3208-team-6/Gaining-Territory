@@ -1,4 +1,5 @@
 import random
+import math
 from itertools import combinations, product, chain
 from shapely.geometry import LineString, Point, Polygon
 
@@ -46,9 +47,69 @@ class MACHINE:
             # Update the list of lines that can be drawn based on the newly drawn line
             self.update_drawable_lines(newly_drawn_line)
 
-        choice = random.choice(self.drawable_lines)
+        choice = []
+        if len(self.drawable_lines) > 15:
+            choice = random.choice(self.drawable_lines)
+        else:
+            choice = self.min_max()
+
         self.update_drawable_lines(choice)
         return choice
+
+    def min_max(self):
+        def step_machine(cutoff):
+            best_value = -math.inf
+            best_choice = None
+
+            choosable_lines = self.drawable_lines
+            for choice in choosable_lines:
+                cur_value = 0
+                if self.does_earn_point(choice):
+                    cur_value += 1
+
+                deleted_lines = self.update_drawable_lines(choice)
+
+                if self.drawable_lines:
+                    cur_value += step_user(best_value)[0]
+
+                self.drawable_lines += deleted_lines
+
+                if cur_value > best_value:
+                    best_value = cur_value
+                    best_choice = choice
+
+                    if best_value >= cutoff:
+                        break
+
+            return (best_value, best_choice)
+
+        def step_user(cutoff):
+            worst_value = math.inf
+            worst_choice = None
+
+            choosable_lines = self.drawable_lines
+            for choice in choosable_lines:
+                cur_value = 0
+                if self.does_earn_point(choice):
+                    cur_value -= 1
+
+                deleted_lines = self.update_drawable_lines(choice)
+
+                if self.drawable_lines:
+                    cur_value += step_machine(worst_value)[0]
+
+                self.drawable_lines += deleted_lines
+
+                if cur_value < worst_value:
+                    worst_value = cur_value
+                    worst_choice = choice
+
+                    if worst_value <= cutoff:
+                        break
+
+            return (worst_value, worst_choice)
+
+        return step_machine(-math.inf)[1]
 
     def check_availability(self, line):
         line_string = LineString(line)
