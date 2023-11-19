@@ -16,17 +16,22 @@ class MACHINE:
            * Line: [(x1, y1), (x2, y2)] -> MACHINE class에서는 x값이 작은 점이 항상 왼쪽에 위치할 필요는 없음 (System이 organize 함)
     """
 
-    def __init__(
-        self, score=[0, 0], drawn_lines=[], whole_lines=[], whole_points=[], location=[]
-    ):
+    def __init__(self, whole_points=[], location=[]):
         self.id = "MACHINE"
         self.score = [0, 0]  # USER, MACHINE
         self.drawn_lines = []  # Drawn Lines
         self.board_size = 7  # 7 x 7 Matrix
         self.num_dots = 0
-        self.whole_points = []
-        self.location = []
+        self.whole_points = whole_points
+        self.location = location
         self.triangles = []  # [(a, b), (c, d), (e, f)]
+
+        # Precomputing all possible lines to draw in the object creation step
+        self.drawable_lines = [
+            [dot1, dot2]
+            for (dot1, dot2) in list(combinations(self.whole_points, 2))
+            if self.check_availability([dot1, dot2])
+        ]
 
     """
     `drawn_lines`, `whole_points`, `triangles`은 System으로부터 주입받음
@@ -34,15 +39,16 @@ class MACHINE:
     """
 
     def find_best_selection(self):
-        """
-        아래의 원래 코드는 Brute Force
-        """
-        available = [
-            [point1, point2]
-            for (point1, point2) in list(combinations(self.whole_points, 2))
-            if self.check_availability([point1, point2])
-        ]
-        return random.choice(available)
+        if self.drawable_lines:
+            # The last element is always the last line added,
+            # because the system works by appending new_line to drawn_line
+            newly_drawn_line = self.drawn_lines[-1]
+            # Update the list of lines that can be drawn based on the newly drawn line
+            self.update_drawable_lines(newly_drawn_line)
+
+        choice = random.choice(self.drawable_lines)
+        self.update_drawable_lines(choice)
+        return choice
 
     def check_availability(self, line):
         line_string = LineString(line)
@@ -117,3 +123,19 @@ class MACHINE:
 
         # Failed to find a triangle that met the conditions
         return False
+
+    def update_drawable_lines(self, newly_drawn_line):
+        line_string = LineString(newly_drawn_line)
+
+        old_drawable_lines = self.drawable_lines
+        self.drawable_lines = []
+
+        for line in old_drawable_lines:
+            if (
+                len(set([newly_drawn_line[0], newly_drawn_line[1], line[0], line[1]]))
+                == 3
+            ):
+                self.drawable_lines.append(line)
+            elif not bool(line_string.intersection(LineString(line))):
+                self.drawable_lines.append(line)
+        return
