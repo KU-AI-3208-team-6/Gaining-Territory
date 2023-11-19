@@ -59,16 +59,16 @@ class MACHINE:
             return False
 
         # Must not skip a dot
-        for point in self.whole_points:
-            if point == dot1 or point == dot2:
+        for dot in self.whole_points:
+            if dot == dot1 or dot == dot2:
                 continue
             else:
-                if bool(line_string.intersection(Point(point))):
+                if bool(line_string.intersection(Point(dot))):
                     return False
 
         # Must not cross another line
         for drawn_line in self.drawn_lines:
-            if len(set([dot1, dot2, drawn_line[0], drawn_line[1]])) == 3:
+            if len(set([dot1, dot2, *drawn_line])) == 3:
                 continue
             elif bool(line_string.intersection(LineString(drawn_line))):
                 return False
@@ -104,7 +104,7 @@ class MACHINE:
 
         # Search for triangles created that don't have a point inside them
         for line1, line2 in product(lines_consist_dot1, lines_consist_dot2):
-            vertices = set([dot1, dot2, line1[0], line1[1], line2[0], line2[1]])
+            vertices = set([dot1, dot2, *line1, *line2])
 
             if len(vertices) != 3:
                 continue
@@ -113,7 +113,7 @@ class MACHINE:
             for dot in self.whole_points:
                 if dot in vertices:
                     continue
-                if bool(Polygon(chain(*[line, line1, line2])).intersection(Point(dot))):
+                if bool(Polygon(chain(line, line1, line2)).intersection(Point(dot))):
                     isEmpty = False
                     break
 
@@ -130,12 +130,12 @@ class MACHINE:
         old_drawable_lines = self.drawable_lines
         self.drawable_lines = []
 
+        deleted_lines = []
         for line in old_drawable_lines:
-            if (
-                len(set([newly_drawn_line[0], newly_drawn_line[1], line[0], line[1]]))
-                == 3
-            ):
+            if len(set([*newly_drawn_line, *line])) == 3:
                 self.drawable_lines.append(line)
             elif not bool(line_string.intersection(LineString(line))):
                 self.drawable_lines.append(line)
-        return
+            else:
+                deleted_lines.append(line)
+        return deleted_lines
