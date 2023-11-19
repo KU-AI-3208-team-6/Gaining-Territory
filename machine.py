@@ -1,6 +1,6 @@
 import random
-from itertools import combinations
-from shapely.geometry import LineString, Point
+from itertools import combinations, product, chain
+from shapely.geometry import LineString, Point, Polygon
 
 
 class MACHINE:
@@ -72,3 +72,48 @@ class MACHINE:
             return False
 
         return True
+
+    def does_earn_point(self, line):
+        dot1, dot2 = line
+
+        lines_consist_dot1 = []
+        lines_consist_dot2 = []
+
+        # Check the line to be drawn and the line to be connected
+        for drawn_line in self.drawn_lines:
+            # Since we're checking for new lines to draw,
+            # they shouldn't be in the list of already drawn lines.
+            # Might need to be added if the logic changes in the future
+            # if drawn_line == line:
+            #     continue
+
+            if dot1 in drawn_line:
+                lines_consist_dot1.append(drawn_line)
+            if dot2 in drawn_line:
+                lines_consist_dot2.append(drawn_line)
+
+        # Triangles cannot be formed if there is no other line connecting them on either side
+        if not lines_consist_dot1 or not lines_consist_dot2:
+            return False
+
+        # Search for triangles created that don't have a point inside them
+        for line1, line2 in product(lines_consist_dot1, lines_consist_dot2):
+            vertices = set([dot1, dot2, line1[0], line1[1], line2[0], line2[1]])
+
+            if len(vertices) != 3:
+                continue
+
+            isEmpty = True
+            for dot in self.whole_points:
+                if dot in vertices:
+                    continue
+                if bool(Polygon(chain(*[line, line1, line2])).intersection(Point(dot))):
+                    isEmpty = False
+                    break
+
+            # Find triangles that meet the criteria
+            if isEmpty:
+                return True
+
+        # Failed to find a triangle that met the conditions
+        return False
