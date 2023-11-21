@@ -1,4 +1,5 @@
 import math
+import time
 from itertools import combinations, product, chain
 from shapely.geometry import LineString, Point, Polygon
 
@@ -108,10 +109,15 @@ class MACHINE:
 
             return (worst_value, worst_choice)
 
+        start_time = time.perf_counter()
         expectation, choice = step_machine(-math.inf, limit)
+        end_time = time.perf_counter()
         print(
-            "find selection : {choice}, expection value : {value}".format(
-                choice=choice, value=expectation
+            "selection : {choice}, expection : {expectation}, depth : {depth} - ({time}ms)".format(
+                choice=choice,
+                expectation=expectation,
+                depth=limit,
+                time=int(round((end_time - start_time) * 1000)),
             )
         )
         return choice
