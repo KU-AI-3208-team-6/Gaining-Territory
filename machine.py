@@ -1,4 +1,3 @@
-import random
 import math
 from itertools import combinations, product, chain
 from shapely.geometry import LineString, Point, Polygon
@@ -48,16 +47,16 @@ class MACHINE:
             self.update_drawable_lines(newly_drawn_line)
 
         choice = []
-        if len(self.drawable_lines) > 15:
-            choice = random.choice(self.drawable_lines)
+        if len(self.drawable_lines) > 13:
+            choice = self.min_max(limit=3)
         else:
-            choice = self.min_max()
+            choice = self.min_max(limit=-1)
 
         self.update_drawable_lines(choice)
         return choice
 
-    def min_max(self):
-        def step_machine(cutoff):
+    def min_max(self, limit):
+        def step_machine(cutoff, cur_limit):
             best_value = -math.inf
             best_choice = None
 
@@ -69,8 +68,8 @@ class MACHINE:
 
                 deleted_lines = self.update_drawable_lines(choice)
 
-                if self.drawable_lines:
-                    cur_value += step_user(best_value)[0]
+                if self.drawable_lines and cur_limit != 0:
+                    cur_value += step_user(best_value, cur_limit - 1)[0]
 
                 self.drawable_lines += deleted_lines
 
@@ -83,7 +82,7 @@ class MACHINE:
 
             return (best_value, best_choice)
 
-        def step_user(cutoff):
+        def step_user(cutoff, cur_limit):
             worst_value = math.inf
             worst_choice = None
 
@@ -95,8 +94,8 @@ class MACHINE:
 
                 deleted_lines = self.update_drawable_lines(choice)
 
-                if self.drawable_lines:
-                    cur_value += step_machine(worst_value)[0]
+                if self.drawable_lines and cur_limit != 0:
+                    cur_value += step_machine(worst_value, cur_limit - 1)[0]
 
                 self.drawable_lines += deleted_lines
 
@@ -109,7 +108,13 @@ class MACHINE:
 
             return (worst_value, worst_choice)
 
-        return step_machine(-math.inf)[1]
+        expectation, choice = step_machine(-math.inf, limit)
+        print(
+            "find selection : {choice}, expection value : {value}".format(
+                choice=choice, value=expectation
+            )
+        )
+        return choice
 
     def check_availability(self, line):
         line_string = LineString(line)
