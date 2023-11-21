@@ -110,7 +110,7 @@ class MACHINE:
             return (worst_value, worst_choice)
 
         start_time = time.perf_counter()
-        expectation, choice = step_machine(-math.inf, limit)
+        expectation, choice = step_machine(math.inf, limit)
         end_time = time.perf_counter()
         print(
             "selection : {choice}, expection : {expectation}, depth : {depth} - ({time}ms)".format(
