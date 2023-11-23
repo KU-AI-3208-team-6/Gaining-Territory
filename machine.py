@@ -1,7 +1,8 @@
-import math
 import time
 from itertools import combinations, product, chain
 from shapely.geometry import LineString, Point, Polygon
+
+INF = 1_000_000
 
 
 class MACHINE:
@@ -58,7 +59,7 @@ class MACHINE:
 
     def min_max(self, limit):
         def step_machine(cutoff, cur_limit):
-            best_value = -math.inf
+            best_value = -INF
             best_choice = None
 
             choosable_lines = self.drawable_lines
@@ -70,7 +71,7 @@ class MACHINE:
                 deleted_lines = self.update_drawable_lines(choice)
 
                 if self.drawable_lines and cur_limit != 0:
-                    cur_value += step_user(best_value, cur_limit - 1)[0]
+                    cur_value += step_user(best_value - cur_value, cur_limit - 1)[0]
 
                 self.drawable_lines += deleted_lines
 
@@ -84,7 +85,7 @@ class MACHINE:
             return (best_value, best_choice)
 
         def step_user(cutoff, cur_limit):
-            worst_value = math.inf
+            worst_value = INF
             worst_choice = None
 
             choosable_lines = self.drawable_lines
@@ -96,7 +97,7 @@ class MACHINE:
                 deleted_lines = self.update_drawable_lines(choice)
 
                 if self.drawable_lines and cur_limit != 0:
-                    cur_value += step_machine(worst_value, cur_limit - 1)[0]
+                    cur_value += step_machine(worst_value - cur_value, cur_limit - 1)[0]
 
                 self.drawable_lines += deleted_lines
 
@@ -110,7 +111,7 @@ class MACHINE:
             return (worst_value, worst_choice)
 
         start_time = time.perf_counter()
-        expectation, choice = step_machine(math.inf, limit)
+        expectation, choice = step_machine(INF, limit)
         end_time = time.perf_counter()
         print(
             "selection : {choice}, expection : {expectation}, depth : {depth} - ({time}ms)".format(
