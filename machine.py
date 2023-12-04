@@ -58,12 +58,16 @@ class MACHINE:
             self.update_drawable_lines(newly_drawn_line)
 
         choice = []
-        if len(self.drawable_lines) > 13:
+        if len(self.drawable_lines) > 15:
             choice = self.min_max(limit=3)
+        elif len(self.drawable_lines) > 7:
+            choice = self.min_max(limit=5)
         else:
             choice = self.min_max(limit=-1)
 
         self.update_drawable_lines(choice)
+        # system과 machine이 drawn_lines를 공유
+        # self.drawn_lines.append(choice)
         return choice
 
     def min_max(self, limit):
@@ -76,8 +80,7 @@ class MACHINE:
                 # print(f"{indent}Machine play {choice}")
 
                 cur_value = 0
-                if self.does_earn_point(choice):
-                    cur_value += 1
+                cur_value += self.calc_earn_point(choice)
 
                 # play choice
                 deleted_lines = self.update_drawable_lines(choice)
@@ -114,8 +117,7 @@ class MACHINE:
                 # print(f"{indent}User play {choice}")
 
                 cur_value = 0
-                if self.does_earn_point(choice):
-                    cur_value -= 1
+                cur_value -= self.calc_earn_point(choice)
 
                 # play choice
                 deleted_lines = self.update_drawable_lines(choice)
@@ -185,7 +187,9 @@ class MACHINE:
 
         return True
 
-    def does_earn_point(self, line):
+    def calc_earn_point(self, line):
+        point = 0
+
         dot1, dot2 = line
 
         lines_consist_dot1 = []
@@ -206,7 +210,7 @@ class MACHINE:
 
         # Triangles cannot be formed if there is no other line connecting them on either side
         if not lines_consist_dot1 or not lines_consist_dot2:
-            return False
+            return point
 
         # Search for triangles created that don't have a point inside them
         for line1, line2 in product(lines_consist_dot1, lines_consist_dot2):
@@ -225,10 +229,10 @@ class MACHINE:
 
             # Find triangles that meet the criteria
             if isEmpty:
-                return True
+                point += 1
 
         # Failed to find a triangle that met the conditions
-        return False
+        return point
 
     def update_drawable_lines(self, newly_drawn_line):
         line_string = LineString(newly_drawn_line)
