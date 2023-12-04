@@ -58,7 +58,7 @@ class MACHINE:
             self.update_drawable_lines(newly_drawn_line)
 
         choice = []
-        if len(self.drawable_lines) > 15:
+        if len(self.drawable_lines) > 13:
             choice = self.min_max(limit=3)
         elif len(self.drawable_lines) > 7:
             choice = self.min_max(limit=5)
@@ -77,10 +77,11 @@ class MACHINE:
 
             choosable_lines = self.drawable_lines.copy()
             for choice in choosable_lines:
-                # print(f"{indent}Machine play {choice}")
+                print(f"{indent}Machine play {choice}")
 
                 cur_value = 0
                 cur_value += self.calc_earn_point(choice)
+                print(f"{indent}Machine earn {cur_value}")
 
                 # play choice
                 deleted_lines = self.update_drawable_lines(choice)
@@ -96,14 +97,14 @@ class MACHINE:
                 self.drawn_lines.pop()
                 self.drawable_lines += deleted_lines
 
-                # print(f"{indent}Machine expect {cur_value}")
+                print(f"{indent}Machine expect {cur_value}")
 
                 if cur_value > best_value:
                     best_value = cur_value
                     best_choice = choice
 
                     if best_value >= cutoff:
-                        # print(f"{indent}Machine cutoff {cur_value}/{cutoff}")
+                        print(f"{indent}Machine cutoff {cur_value}/{cutoff}")
                         break
 
             return (best_value, best_choice)
@@ -114,10 +115,11 @@ class MACHINE:
 
             choosable_lines = self.drawable_lines.copy()
             for choice in choosable_lines:
-                # print(f"{indent}User play {choice}")
+                print(f"{indent}User play {choice}")
 
                 cur_value = 0
                 cur_value -= self.calc_earn_point(choice)
+                print(f"{indent}User earn {cur_value}")
 
                 # play choice
                 deleted_lines = self.update_drawable_lines(choice)
@@ -133,20 +135,20 @@ class MACHINE:
                 self.drawn_lines.pop()
                 self.drawable_lines += deleted_lines
 
-                # print(f"{indent}User expect {cur_value}")
+                print(f"{indent}User expect {cur_value}")
 
                 if cur_value < worst_value:
                     worst_value = cur_value
                     worst_choice = choice
 
                     if worst_value <= cutoff:
-                        # print(f"{indent}User cutoff {cur_value}/{cutoff}")
+                        print(f"{indent}User cutoff {cur_value}/{cutoff}")
                         break
 
             return (worst_value, worst_choice)
 
         start_time = time.perf_counter()
-        expectation, choice = step_machine(INF, limit)
+        expectation, choice = step_machine(INF, limit, "\t")
         end_time = time.perf_counter()
         print(
             "selection : {choice}, expection : {expectation}, depth : {depth} - ({time}ms)".format(
@@ -154,7 +156,8 @@ class MACHINE:
                 expectation=expectation,
                 depth=limit,
                 time=int(round((end_time - start_time) * 1000)),
-            )
+            ),
+            flush=True,
         )
         return choice
 
