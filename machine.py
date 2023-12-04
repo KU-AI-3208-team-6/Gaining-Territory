@@ -67,54 +67,78 @@ class MACHINE:
         return choice
 
     def min_max(self, limit):
-        def step_machine(cutoff, cur_limit):
+        def step_machine(cutoff, cur_limit, indent=""):
             best_value = -INF
             best_choice = None
 
-            choosable_lines = self.drawable_lines
+            choosable_lines = self.drawable_lines.copy()
             for choice in choosable_lines:
+                # print(f"{indent}Machine play {choice}")
+
                 cur_value = 0
                 if self.does_earn_point(choice):
                     cur_value += 1
 
+                # play choice
                 deleted_lines = self.update_drawable_lines(choice)
+                self.drawn_lines.append(choice)
 
+                # step child (USER)
                 if self.drawable_lines and cur_limit != 0:
-                    cur_value += step_user(best_value - cur_value, cur_limit - 1)[0]
+                    cur_value += step_user(
+                        best_value - cur_value, cur_limit - 1, indent + "\t"
+                    )[0]
 
+                # undo choice
+                self.drawn_lines.pop()
                 self.drawable_lines += deleted_lines
+
+                # print(f"{indent}Machine expect {cur_value}")
 
                 if cur_value > best_value:
                     best_value = cur_value
                     best_choice = choice
 
                     if best_value >= cutoff:
+                        # print(f"{indent}Machine cutoff {cur_value}/{cutoff}")
                         break
 
             return (best_value, best_choice)
 
-        def step_user(cutoff, cur_limit):
+        def step_user(cutoff, cur_limit, indent=""):
             worst_value = INF
             worst_choice = None
 
-            choosable_lines = self.drawable_lines
+            choosable_lines = self.drawable_lines.copy()
             for choice in choosable_lines:
+                # print(f"{indent}User play {choice}")
+
                 cur_value = 0
                 if self.does_earn_point(choice):
                     cur_value -= 1
 
+                # play choice
                 deleted_lines = self.update_drawable_lines(choice)
+                self.drawn_lines.append(choice)
 
+                # step child (MACHINE)
                 if self.drawable_lines and cur_limit != 0:
-                    cur_value += step_machine(worst_value - cur_value, cur_limit - 1)[0]
+                    cur_value += step_machine(
+                        worst_value - cur_value, cur_limit - 1, indent + "\t"
+                    )[0]
 
+                # undo choice
+                self.drawn_lines.pop()
                 self.drawable_lines += deleted_lines
+
+                # print(f"{indent}User expect {cur_value}")
 
                 if cur_value < worst_value:
                     worst_value = cur_value
                     worst_choice = choice
 
                     if worst_value <= cutoff:
+                        # print(f"{indent}User cutoff {cur_value}/{cutoff}")
                         break
 
             return (worst_value, worst_choice)
